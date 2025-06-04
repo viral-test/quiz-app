@@ -1,5 +1,4 @@
 import { useState } from "react";
-import * as XLSX from "xlsx";
 
 export default function Home() {
   const [quiz, setQuiz] = useState([]);
@@ -7,10 +6,14 @@ export default function Home() {
   const [answers, setAnswers] = useState([]);
   const [submitted, setSubmitted] = useState(false);
 
-  function handleUpload(event) {
+  async function handleUpload(event) {
     const file = event.target.files[0];
-    const reader = new FileReader();
+    if (!file) return;
 
+    // Dynamically import xlsx only on client-side
+    const XLSX = await import("xlsx");
+
+    const reader = new FileReader();
     reader.onload = (e) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: "array" });
@@ -21,7 +24,6 @@ export default function Home() {
       setAnswers(Array(json.length).fill(null));
       setSubmitted(false);
     };
-
     reader.readAsArrayBuffer(file);
   }
 
@@ -52,7 +54,9 @@ export default function Home() {
     return (
       <div style={{ padding: 20 }}>
         <h1>Quiz Completed</h1>
-        <p>Your Score: {score} / {quiz.length}</p>
+        <p>
+          Your Score: {score} / {quiz.length}
+        </p>
       </div>
     );
   }
@@ -62,7 +66,9 @@ export default function Home() {
 
   return (
     <div style={{ padding: 20, maxWidth: 600 }}>
-      <h2>Question {index + 1}</h2>
+      <h2>
+        Question {index + 1} / {quiz.length}
+      </h2>
       <p>{current.Question}</p>
       {options.map((opt) => (
         <div key={opt}>
@@ -89,7 +95,9 @@ export default function Home() {
           Next
         </button>{" "}
         {index === quiz.length - 1 && (
-          <button onClick={submitQuiz}>Submit</button>
+          <button onClick={submitQuiz} disabled={answers[index] == null}>
+            Submit
+          </button>
         )}
       </div>
     </div>
